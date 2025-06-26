@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>スキュタレー暗号ビジュアライザー - Scytale Cipher Visualizer</title>
+    <meta
+      name="description"
+      content="古代スパルタで使われたスキュタレー暗号を視覚的に学習できる教育ツール"
+    />
+    <meta
+      name="keywords"
+      content="暗号, 古典暗号, スキュタレー, 教育, セキュリティ, IPUSIRON"
+    />
+    <meta name="author" content="IPUSIRON" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>スキュタレー暗号ビジュアライザー（Scytale Cipher Visualizer）</h1>
+        <div class="subtitle">古代スパルタの転置暗号を体験しよう</div>
+      </div>
+
+      <div class="info-panel">
+        <h3>スキュタレー暗号とは？</h3>
+        <p>
+          古代スパルタで使われた転置暗号。円柱に紐を巻いて文字を書き、紐をほどくと暗号文になります。復号には同じ太さの円柱が必要です。
+        </p>
+      </div>
+
+      <div class="controls">
+        <div class="input-group">
+          <label for="inputText">入力テキスト</label>
+          <textarea
+            id="inputText"
+            placeholder="暗号化したい文字列を入力してください&#10;例: HELLO_WORLD"
+          ></textarea>
+        </div>
+        <div class="input-group">
+          <label for="rows">行数（鍵）</label>
+          <input type="number" id="rows" min="2" max="10" value="3" />
+        </div>
+        <div class="input-group">
+          <label for="mode">モード</label>
+          <select id="mode">
+            <option value="encrypt">暗号化</option>
+            <option value="decrypt">復号</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>&nbsp;</label>
+          <button class="execute-btn" onclick="processText()">実行</button>
+        </div>
+      </div>
+
+      <div class="scytale-visual">
+        <div class="scytale-rod" id="scytaleRod">
+          <div class="scytale-band" id="scytaleBand"></div>
+          <div class="scytale-text" id="scytaleText"></div>
+        </div>
+        <div class="scytale-info">
+          <div id="scytaleStatus">
+            古代スパルタのスキュタレー（円柱）- 行数を変更すると太さが変わります
+          </div>
+        </div>
+      </div>
+
+      <div class="visualization">
+        <h2 class="section-title">📊 マトリクス表示</h2>
+        <div class="matrix-container">
+          <div id="matrixDisplay">
+            <p style="text-align: center; color: #7f8c8d; font-style: italic">
+              上記のボタンを押すとマトリクスが表示されます
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-container">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+          "
+        >
+          <h2
+            class="section-title"
+            style="color: white; border-left-color: white; margin-bottom: 0"
+          >
+            🎯 結果
+          </h2>
+          <button
+            id="copyBtn"
+            class="copy-btn"
+            onclick="copyResult()"
+            style="display: none"
+          >
+            <span id="copyIcon">📋</span> コピー
+          </button>
+        </div>
+        <div id="resultText" class="result-text">結果がここに表示されます</div>
+      </div>
+
+      <div class="algorithm-info">
+        <div class="algorithm-step">
+          <h4>🔒 暗号化アルゴリズム</h4>
+          <ol>
+            <li>平文を指定した行数で折り返す</li>
+            <li>マトリクスに文字を配置</li>
+            <li>列方向に読み取って暗号文を生成</li>
+          </ol>
+        </div>
+        <div class="algorithm-step">
+          <h4>🔓 復号アルゴリズム</h4>
+          <ol>
+            <li>暗号文の長さから列数を計算</li>
+            <li>列方向に文字を分配</li>
+            <li>行方向に読み取って平文を復元</li>
+          </ol>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>
+          Created by
+          <a href="https://akademeia.info/" target="_blank">IPUSIRON</a> |
+          <a
+            href="https://github.com/ipusiron/scytale-cipher-visualizer"
+            target="_blank"
+            >GitHub</a
+          >
+        </p>
+      </footer>
+    </div>
+    <div
+      style="
+        margin-top: 30px;
+        padding: 15px;
+        text-align: center;
+        border-top: 1px solid #dee2e6;
+        color: #6c757d;
+      "
+    >
+      🔗 GitHubリポジトリはこちら（<a
+        href="https://github.com/ipusiron/scytale-cipher-visualizer"
+        target="_blank"
+        style="color: #007bff; text-decoration: none"
+        >ipusiron/scytale-cipher-visualizer</a
+      >）
+    </div>
+
+    <script src="js/script.js"></script>
+  </body>
+</html>
