@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self';" />
     <title>スキュタレー暗号ビジュアライザー - Scytale Cipher Visualizer</title>
     <meta
       name="description"
@@ -25,32 +26,76 @@
       <div class="info-panel">
         <h3>スキュタレー暗号とは？</h3>
         <p>
-          古代スパルタで使われた転置暗号。円柱に紐を巻いて文字を書き、紐をほどくと暗号文になります。復号には同じ太さの円柱が必要です。
+          古代スパルタで使われた転置暗号。円柱（スキュタレー）に紐を巻いて文字を書き、紐をほどくと暗号文になります。復号には同じ太さの円柱が必要です。<br>
+          <strong>重要：行数 = 円柱の太さ</strong> - 行数が大きいほど太い円柱を使った暗号になります。
         </p>
       </div>
 
-      <div class="controls">
-        <div class="input-group">
-          <label for="inputText">入力テキスト</label>
-          <textarea
-            id="inputText"
-            placeholder="暗号化したい文字列を入力してください&#10;例: HELLO_WORLD"
-          ></textarea>
+      <!-- タブナビゲーション -->
+      <div class="tab-navigation">
+        <button class="tab-btn active" id="encryptTab" data-tab="encrypt">
+          🔒 暗号化
+        </button>
+        <button class="tab-btn" id="decryptTab" data-tab="decrypt">
+          🔓 復号
+        </button>
+      </div>
+
+      <!-- 暗号化タブ -->
+      <div class="tab-content active" id="encryptContent">
+        <div class="controls">
+          <div class="input-group">
+            <label for="encryptInputText">平文テキスト</label>
+            <textarea
+              id="encryptInputText"
+              placeholder="暗号化したい文字列を入力してください&#10;例: HELLO_WORLD"
+            ></textarea>
+          </div>
+          <div class="input-group">
+            <label for="encryptRows">行数（鍵）= 円柱の太さ</label>
+            <input type="number" id="encryptRows" min="2" max="10" value="3" />
+            <small class="input-hint">数値が大きいほど太い円柱になります</small>
+          </div>
+          <div class="input-group">
+            <label for="fillPadding">埋字</label>
+            <div class="checkbox-wrapper">
+              <input type="checkbox" id="fillPadding" />
+              <label for="fillPadding" class="checkbox-label">ランダム文字で埋める</label>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>&nbsp;</label>
+            <button class="execute-btn" id="encryptExecuteBtn">🔒 暗号化実行</button>
+          </div>
         </div>
-        <div class="input-group">
-          <label for="rows">行数（鍵）</label>
-          <input type="number" id="rows" min="2" max="10" value="3" />
-        </div>
-        <div class="input-group">
-          <label for="mode">モード</label>
-          <select id="mode">
-            <option value="encrypt">暗号化</option>
-            <option value="decrypt">復号</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label>&nbsp;</label>
-          <button class="execute-btn" onclick="processText()">実行</button>
+      </div>
+
+      <!-- 復号タブ -->
+      <div class="tab-content" id="decryptContent">
+        <div class="controls">
+          <div class="input-group">
+            <label for="decryptInputText">暗号文</label>
+            <textarea
+              id="decryptInputText"
+              placeholder="復号したい暗号文を入力してください&#10;例: HELOL_ORLDW"
+            ></textarea>
+          </div>
+          <div class="input-group">
+            <label for="decryptRows">行数（鍵）= 円柱の太さ</label>
+            <input type="number" id="decryptRows" min="2" max="10" value="3" />
+            <small class="input-hint">暗号化時と同じ行数を指定してください</small>
+          </div>
+          <div class="input-group sync-group">
+            <label>暗号文の同期</label>
+            <button class="sync-btn" id="syncCipherBtn">
+              📋 暗号化結果を取得
+            </button>
+            <small class="input-hint">暗号化タブの結果を自動で入力します</small>
+          </div>
+          <div class="input-group">
+            <label>&nbsp;</label>
+            <button class="execute-btn" id="decryptExecuteBtn">🔓 復号実行</button>
+          </div>
         </div>
       </div>
 
@@ -61,7 +106,7 @@
         </div>
         <div class="scytale-info">
           <div id="scytaleStatus">
-            古代スパルタのスキュタレー（円柱）- 行数を変更すると太さが変わります
+            古代スパルタのスキュタレー（円柱）- 行数 = 円柱の太さ（行数を変更すると太さが変わります）
           </div>
         </div>
       </div>
@@ -95,7 +140,6 @@
           <button
             id="copyBtn"
             class="copy-btn"
-            onclick="copyResult()"
             style="display: none"
           >
             <span id="copyIcon">📋</span> コピー

@@ -45,7 +45,7 @@ body {
 
 .controls {
     display: grid;
-    grid-template-columns: 1fr auto auto auto;
+    grid-template-columns: 1fr auto auto auto auto;
     gap: 15px;
     margin-bottom: 30px;
     padding: 20px;
@@ -63,6 +63,93 @@ body {
     font-weight: 600;
     margin-bottom: 5px;
     color: #2c3e50;
+}
+
+.input-hint {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 3px;
+    font-style: italic;
+}
+
+/* タブナビゲーション */
+.tab-navigation {
+    display: flex;
+    margin-bottom: 0;
+    border-bottom: 2px solid #eee;
+    background: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 15px 20px;
+    border: none;
+    background: transparent;
+    color: #7f8c8d;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 10px 10px 0 0;
+    position: relative;
+}
+
+.tab-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+/* タブコンテンツ */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* 同期ボタン */
+.sync-btn {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+}
+
+.sync-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+
+.sync-btn:active {
+    transform: translateY(0);
+}
+
+.sync-group {
+    text-align: center;
 }
 
 textarea {
@@ -117,6 +204,42 @@ input[type="number"]:focus, select:focus {
 
 .execute-btn:active {
     transform: translateY(0);
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #3498db;
+    cursor: pointer;
+}
+
+.checkbox-label {
+    font-size: 14px;
+    color: #2c3e50;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.padding-char {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    color: white !important;
+    font-weight: bold;
+    position: relative;
+}
+
+.padding-char::after {
+    content: "🔸";
+    position: absolute;
+    top: -2px;
+    right: 2px;
+    font-size: 8px;
+    opacity: 0.8;
 }
 
 .copy-btn {
