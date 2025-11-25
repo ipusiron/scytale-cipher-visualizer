@@ -1,3 +1,36 @@
+<!--
+---
+id: day010
+slug: scytale-cipher-visualizer
+
+title: "Scytale Cipher Visualizer"
+
+subtitle_ja: "スキュタレー暗号ビジュアライザー"
+subtitle_en: "Ancient Spartan Transposition Cipher Simulator"
+
+description_ja: "古代スパルタの軍事暗号「スキュタレー暗号」をWebブラウザで体験できる教育ツール。マトリクス表示とアニメーションで転置暗号の仕組みを視覚的に学べます。"
+description_en: "An educational tool to experience the ancient Spartan military cipher 'Scytale Cipher' in your web browser. Learn the mechanics of transposition ciphers visually through matrix display and animations."
+
+category_ja:
+  - 古典暗号
+  - 転地式暗号
+category_en:
+  - Classical Cryptography
+  - Transposition Cipher
+
+difficulty: 1
+
+tags:
+  - visualization
+  - educational
+
+repo_url: "https://github.com/ipusiron/scytale-cipher-visualizer"
+demo_url: "https://ipusiron.github.io/scytale-cipher-visualizer/"
+
+hub: true
+---
+-->
+
 # スキュタレー暗号ビジュアライザー（Scytale Cipher Visualizer）
 
 **Day 10 - 生成AIで作るセキュリティツール100**
