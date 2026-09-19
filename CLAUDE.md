@@ -4,20 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Scytale Cipher Visualizer** - an educational web application that demonstrates the ancient Spartan transposition cipher through interactive visualization. The project is a pure HTML/CSS/JavaScript static web application with no build process or external dependencies.
+This is a **Scytale Cipher Visualizer** - an educational web application that demonstrates the ancient Spartan transposition cipher through interactive visualization. Day010の静的Webツールです。外部依存やビルド処理はありません。
 
 ## Development Commands
 
 This is a static web application that requires no build process. To run locally:
 
 ```bash
-# Start a local web server (choose one):
+# Node 22以上でテスト（依存なし）
+npm test
+# ローカルHTTP配信
 python -m http.server 8000
-# or
-npx serve .
 
 # Then open http://localhost:8000 in browser
 ```
+
+`index.html`をfile://で直接開いても全機能が動きます。古典スクリプトを使い、ES moduleにはしません。
 
 ## Code Architecture
 
@@ -26,25 +28,38 @@ npx serve .
 scytale-cipher-visualizer/
 ├── index.html          # Main HTML page with UI components
 ├── css/style.css       # Complete styling with animations and matrix visualization
-├── js/script.js        # Core cipher logic and interactive features
-└── assets/             # Static assets (screenshots, etc.)
+├── js/scytale-logic.js # DOMに依存しない暗号ロジック
+├── js/script.js        # DOM処理とアニメーション
+├── assets/             # faviconとスクリーンショット
+├── test/               # 6ファイルのnode:test
+├── .github/workflows/test.yml # pushとpull_requestでNode 22のテスト
+├── package.json        # npm test（依存なし）
+└── LICENSE             # MITライセンス（旧名LISENCE）
 ```
 
-### Core Components (js/script.js)
+### Core Components
 
-**Cipher Logic:**
-- `encrypt(text, rows)` - Implements Scytale encryption using matrix transposition
-- `decrypt(cipherText, rows)` - Implements Scytale decryption 
-- `createEncryptMatrix()` / `createDecryptMatrix()` - Matrix generation for visualization
+**Cipher Logic (js/scytale-logic.js):**
 
-**Visualization System:**
-- `displayMatrix(matrix, mode)` - Renders interactive color-coded matrix table (js/script.js:128)
-- `animateScytale(mode, text)` - Animates the visual scytale rod during processing (js/script.js:192)
-- `updateScytaleSize()` - Dynamically adjusts scytale rod thickness based on key (js/script.js:224)
+- `sanitize` / `validate` — 制御文字除去と上限10000コードポイント・整数行数2〜10の検査
+- `encrypt` / `decrypt` — 行方向配置・列方向読み取りと厳密な逆写像
+- `buildEncryptMatrix` / `buildDecryptMatrix` — 空セルを空文字で保持した二次元配列
+- `isIdentity` / `usedRows` / `colLengths` — 恒等・使用行数・列ごとの文字数
+- `bruteForce` — 行数2〜10のresults、同じplaintextをまとめたgroups、uniqueCount
+- `randomPadChars` — crypto.getRandomValuesと234以上の棄却によるA〜Zの埋字
 
-**User Interface:**
-- `processText()` - Main entry point triggered by "実行" button (js/script.js:7)
-- `copyResult()` - Clipboard functionality with fallback support (js/script.js:248)
+**Visualization System (js/script.js):**
+
+- `displayMatrix` — 先頭60列の行色・埋字・空セルを描画
+- `animateScytale` / `stopScytaleAnimation` — 円柱の回転と帯の巻き取り／ほどき
+- `updateScytaleSize` — 行数による円柱の太さと列数の表示
+
+**User Interface (js/script.js):**
+
+- `processText` — 入力を固定して実行し、処理中の多重実行を抑止
+- `copyResult` — spanのtextContentでコピー通知を更新。フォールバックも保持
+- `showBruteForce` / `syncCipherText` — 9候補の表示と暗号化時の行数を含む同期
+- `initializeTheme` / `applyTheme` — 検証したlight／dark設定の復元
 
 ### Key Features
 
@@ -63,7 +78,7 @@ scytale-cipher-visualizer/
 
 ### Event Handling
 
-- Mode switching updates input placeholders automatically
+- タブのARIA状態と矢印キー操作を同期
 - Real-time scytale size updates when key (row count) changes
 - Auto-execution on page load with default "HELLO_WORLD" example
 
@@ -73,4 +88,16 @@ scytale-cipher-visualizer/
 - Uses modern Web APIs (Clipboard API with document.execCommand fallback)
 - Responsive design supports mobile and desktop
 - Japanese language UI with educational focus
-- Character encoding handles special characters and spaces
+- 前後の空白を保持し、1文字を1コードポイントで処理。ZWJシーケンスは分割されうる
+
+## Safety and Verification
+
+- 入力を外部送信せず、localStorageに保存するのはテーマだけ
+- 依存パッケージ・CDN・fetchを追加しない
+- 描画はtextContent／createElementを使い、innerHTMLとインラインstyle属性は使わない
+- CSPのmetaにframe-ancestorsを追加しない（metaでは無効）
+- 円柱アニメーションは削除せず、reduced-motionでのみ停止し、待機も1500msから0msに変更
+- 埋字は復号後も保持。除去は利用者の判断
+- 既存のscreenshot.pngとassets/screenshot.pngは変更しない
+- ロジック変更時はnpm testとHTTP／file://の実ブラウザー確認を実行
+- 期待値は実装に合わせて書き換えない。READMEの表と既知解答13例も検証
