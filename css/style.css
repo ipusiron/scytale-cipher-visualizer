@@ -731,6 +731,21 @@ textarea::placeholder {
     font-size: 20px;
 }
 
+.lang-toggle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    background: var(--surface-2);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.6;
+}
+
 .execute-group {
     align-self: end;
 }

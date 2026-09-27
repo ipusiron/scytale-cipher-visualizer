@@ -21,8 +21,9 @@ test('CSP・referrer・viewport・noscript・faviconと安全な描画', () => {
 
 test('古典スクリプトを正しい順でdefer読み込み', () => {
     const scripts = [...html.matchAll(/<script\b([^>]*)>/g)];
-    assert.equal(scripts.length, 2);
-    assert.deepEqual(scripts.map(m => m[1].match(/src="([^"]+)"/)[1]), ['js/scytale-logic.js', 'js/script.js']);
+    assert.equal(scripts.length, 3);
+    assert.deepEqual(scripts.map(m => m[1].match(/src="([^"]+)"/)[1]),
+        ['js/i18n.js', 'js/scytale-logic.js', 'js/script.js']);
     for (const script of scripts) {
         assert.match(script[1], /\bdefer\b/);
         assert.doesNotMatch(script[1], /type="module"/);
@@ -33,7 +34,7 @@ test('操作ID・フォーム名・タブARIA・ライブ通知・外部リン�
     for (const id of [
         'encryptInputText', 'decryptInputText', 'encryptRows', 'decryptRows', 'fillPadding',
         'encryptExecuteBtn', 'decryptExecuteBtn', 'syncCipherBtn', 'bruteForceBtn', 'copyBtn',
-        'matrixDisplay', 'resultText', 'scytaleStatus', 'themeToggleBtn'
+        'matrixDisplay', 'resultText', 'scytaleStatus', 'themeToggleBtn', 'langToggle'
     ]) assert.ok(html.includes(`id="${id}"`), id);
     for (const id of ['encryptInputText', 'decryptInputText', 'encryptRows', 'decryptRows', 'fillPadding']) {
         assert.ok(html.includes(`for="${id}"`));

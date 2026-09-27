@@ -57,13 +57,15 @@ test('sanitizeは制御文字を除去し前後の半角・全角空白を保持
 });
 
 test('入力上限はコードポイント10000文字、行数は整数2〜10', () => {
+    assert.equal(L.MAX_LENGTH, 10000);
     assert.equal(L.validate('😀'.repeat(10000), 2), null);
-    assert.match(L.validate('😀'.repeat(10001), 2), /10000/);
+    // validateは文言を持たず、辞書のキーと差し込み値だけを返します。
+    assert.deepEqual(L.validate('😀'.repeat(10001), 2), { key: 'error.tooLong', params: { max: 10000 } });
     for (const rows of [1, 11, 2.5, NaN, Infinity, '3']) {
-        assert.match(L.validate('A', rows), /整数/);
-        assert.throws(() => L.encrypt('A', rows), RangeError);
+        assert.deepEqual(L.validate('A', rows), { key: 'error.rows', params: {} });
+        assert.throws(() => L.encrypt('A', rows), { name: 'RangeError', message: 'error.rows' });
     }
-    assert.match(L.validate('', 2), /入力/);
+    assert.deepEqual(L.validate('', 2), { key: 'error.empty', params: {} });
     assert.equal(L.validate(' ', 2), null);
     assert.equal(L.encrypt('', 2), '');
     assert.equal(L.decrypt('', 2), '');
@@ -101,5 +103,5 @@ test('埋字は234以上を棄却してA〜Zから選択', () => {
     assert.deepEqual(L.randomPadChars(4, source), ['A', 'Z', 'A', 'Z']);
     assert.deepEqual(L.randomPadChars(0, source), []);
     assert.match(L.randomPadChars(100).join(''), /^[A-Z]{100}$/);
-    assert.throws(() => L.randomPadChars(-1), RangeError);
+    assert.throws(() => L.randomPadChars(-1), { name: 'RangeError', message: 'error.padCount' });
 });

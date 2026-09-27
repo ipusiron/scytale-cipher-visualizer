@@ -28,12 +28,14 @@ python -m http.server 8000
 scytale-cipher-visualizer/
 ├── index.html          # Main HTML page with UI components
 ├── css/style.css       # Complete styling with animations and matrix visualization
+├── js/i18n.js          # 日本語・英語の辞書と切り替え（他のスクリプトより先に読む）
 ├── js/scytale-logic.js # DOMに依存しない暗号ロジック
 ├── js/script.js        # DOM処理とアニメーション
 ├── assets/             # faviconとスクリーンショット
-├── test/               # 6ファイルのnode:test
+├── test/               # 7ファイルのnode:test
 ├── .github/workflows/test.yml # pushとpull_requestでNode 22のテスト
 ├── package.json        # npm test（依存なし）
+├── README.en.md        # 英語版README
 └── LICENSE             # MITライセンス（旧名LISENCE）
 ```
 
@@ -41,7 +43,7 @@ scytale-cipher-visualizer/
 
 **Cipher Logic (js/scytale-logic.js):**
 
-- `sanitize` / `validate` — 制御文字除去と上限10000コードポイント・整数行数2〜10の検査
+- `sanitize` / `validate` — 制御文字除去と上限10000コードポイント・整数行数2〜10の検査。`validate`は文言でなく`{ key, params }`を返し、`RangeError`のメッセージも辞書のキー
 - `encrypt` / `decrypt` — 行方向配置・列方向読み取りと厳密な逆写像
 - `buildEncryptMatrix` / `buildDecryptMatrix` — 空セルを空文字で保持した二次元配列
 - `isIdentity` / `usedRows` / `colLengths` — 恒等・使用行数・列ごとの文字数
@@ -60,6 +62,14 @@ scytale-cipher-visualizer/
 - `copyResult` — spanのtextContentでコピー通知を更新。フォールバックも保持
 - `showBruteForce` / `syncCipherText` — 9候補の表示と暗号化時の行数を含む同期
 - `initializeTheme` / `applyTheme` — 検証したlight／dark設定の復元
+
+**Internationalization (js/i18n.js):**
+
+- `t` / `apply` / `init` / `setLanguage` / `has` — 辞書の引き当て、`data-i18n`の適用、`?lang=`・保存値・`navigator.language`からの決定
+- 画面側は文言を持たず、表示中の内容を「辞書のキーと差し込み値」で覚え、`languagechange`で`render*()`を呼び直す
+- 状態で変わる属性（テーマボタンの`aria-label`）は`data-i18n-aria-label`に任せず、`renderThemeButton`が状態から組み立てる
+- コピー通知の復帰は定数でなく`copyBtn.dataset.copyState`の印から組み立てる
+- 言語の保存は`i18n.js`だけが持つ（`localStorage`のキーは`scytale-cipher-visualizer-language`）
 
 ### Key Features
 
@@ -87,12 +97,12 @@ scytale-cipher-visualizer/
 - Pure vanilla JavaScript - no frameworks or build tools
 - Uses modern Web APIs (Clipboard API with document.execCommand fallback)
 - Responsive design supports mobile and desktop
-- Japanese language UI with educational focus
+- 日本語・英語のUI。既定は`?lang=` → 保存値 → `navigator.language`の順で決まる
 - 前後の空白を保持し、1文字を1コードポイントで処理。ZWJシーケンスは分割されうる
 
 ## Safety and Verification
 
-- 入力を外部送信せず、localStorageに保存するのはテーマだけ
+- 入力を外部送信せず、localStorageに保存するのはテーマと言語の選択だけ
 - 依存パッケージ・CDN・fetchを追加しない
 - 描画はtextContent／createElementを使い、innerHTMLとインラインstyle属性は使わない
 - CSPのmetaにframe-ancestorsを追加しない（metaでは無効）
@@ -101,3 +111,5 @@ scytale-cipher-visualizer/
 - 既存のscreenshot.pngとassets/screenshot.pngは変更しない
 - ロジック変更時はnpm testとHTTP／file://の実ブラウザー確認を実行
 - 期待値は実装に合わせて書き換えない。READMEの表と既知解答13例も検証
+- 文言を足すときは`js/i18n.js`の日英両方に入れ、画面側には直書きしない
+- 表示を書き換える処理を足したら、`languagechange`のハンドラーにも`render*()`を足す

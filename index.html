@@ -20,60 +20,57 @@
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
-    <noscript>このツールを使うにはJavaScriptを有効にしてください。</noscript>
+    <noscript>このツールを使うにはJavaScriptを有効にしてください。 / This tool requires JavaScript.</noscript>
     <div class="container">
       <div class="header">
-        <h1>スキュタレー暗号ビジュアライザー<br>（Scytale Cipher Visualizer）</h1>
-        <div class="subtitle">古代スパルタの転置暗号を体験しよう</div>
+        <h1><span data-i18n="app.h1"></span><br><span data-i18n="app.h1sub"></span></h1>
+        <div class="subtitle" data-i18n="app.subtitle"></div>
+        <button id="langToggle" class="lang-toggle" type="button"
+          data-i18n="app.langButton" data-i18n-aria-label="app.langAria">English</button>
         <button id="themeToggleBtn" class="theme-toggle" aria-label="ダークモードに切り替える" aria-pressed="false">🌙</button>
       </div>
 
       <div class="info-panel">
-        <h2>スキュタレー暗号とは？</h2>
+        <h2 data-i18n="intro.heading"></h2>
         <p>
-          古代スパルタで使われた転置暗号です。円柱（スキュタレー）に紐を巻いて文字を書き、紐をほどくと暗号文になります。<br>
-          <strong>重要：行数 = 円柱の太さ</strong> - 行数が大きいほど太い円柱を使った暗号になります。
-          本ツールでは、異なる行数でも列数が同じなら復号結果は同じです。
+          <span data-i18n="intro.line1"></span><br>
+          <strong data-i18n="intro.strong"></strong><span data-i18n="intro.line2"></span>
         </p>
       </div>
 
       <!-- タブナビゲーション -->
-      <div class="tab-navigation" role="tablist" aria-label="暗号化と復号">
+      <div class="tab-navigation" role="tablist" data-i18n-aria-label="tabs.aria">
         <button class="tab-btn active" id="encryptTab" data-tab="encrypt"
-          role="tab" aria-selected="true" aria-controls="encryptContent">
-          🔒 暗号化
-        </button>
+          role="tab" aria-selected="true" aria-controls="encryptContent" data-i18n="tab.encrypt"></button>
         <button class="tab-btn" id="decryptTab" data-tab="decrypt"
-          role="tab" aria-selected="false" aria-controls="decryptContent" tabindex="-1">
-          🔓 復号
-        </button>
+          role="tab" aria-selected="false" aria-controls="decryptContent" tabindex="-1" data-i18n="tab.decrypt"></button>
       </div>
 
       <!-- 暗号化タブ -->
       <div class="tab-content active" id="encryptContent" role="tabpanel" aria-labelledby="encryptTab">
         <div class="controls">
           <div class="input-group">
-            <label for="encryptInputText">平文テキスト</label>
+            <label for="encryptInputText" data-i18n="encrypt.textLabel"></label>
             <textarea
               id="encryptInputText"
-              placeholder="暗号化したい文字列を入力してください&#10;例: HELLO_WORLD"
+              data-i18n-placeholder="encrypt.placeholder"
             ></textarea>
             <small id="encryptCharCount" class="input-hint" aria-live="polite"></small>
           </div>
           <div class="input-group">
-            <label for="encryptRows">行数（鍵）= 円柱の太さ</label>
+            <label for="encryptRows" data-i18n="rows.label"></label>
             <input type="number" id="encryptRows" min="2" max="10" value="3" />
-            <small class="input-hint">数値が大きいほど太い円柱になります</small>
+            <small class="input-hint" data-i18n="encrypt.rowsHint"></small>
           </div>
           <div class="input-group">
-            <label for="fillPadding">埋字</label>
+            <label for="fillPadding" data-i18n="padding.label"></label>
             <div class="checkbox-wrapper">
               <input type="checkbox" id="fillPadding" />
-              <label for="fillPadding" class="checkbox-label">ランダム文字で埋める</label>
+              <label for="fillPadding" class="checkbox-label" data-i18n="padding.checkbox"></label>
             </div>
           </div>
           <div class="input-group execute-group">
-            <button class="execute-btn" id="encryptExecuteBtn">🔒 暗号化実行</button>
+            <button class="execute-btn" id="encryptExecuteBtn" data-i18n="encrypt.run"></button>
           </div>
         </div>
       </div>
@@ -82,30 +79,28 @@
       <div class="tab-content" id="decryptContent" role="tabpanel" aria-labelledby="decryptTab" hidden>
         <div class="controls">
           <div class="input-group">
-            <label for="decryptInputText">暗号文</label>
+            <label for="decryptInputText" data-i18n="decrypt.textLabel"></label>
             <textarea
               id="decryptInputText"
-              placeholder="復号したい暗号文を入力してください&#10;例: HORE_LLWDLO"
+              data-i18n-placeholder="decrypt.placeholder"
             ></textarea>
             <small id="decryptCharCount" class="input-hint" aria-live="polite"></small>
           </div>
           <div class="input-group">
-            <label for="decryptRows">行数（鍵）= 円柱の太さ</label>
+            <label for="decryptRows" data-i18n="rows.label"></label>
             <input type="number" id="decryptRows" min="2" max="10" value="3" />
-            <small class="input-hint">暗号化時と同じ行数を指定してください</small>
+            <small class="input-hint" data-i18n="decrypt.rowsHint"></small>
           </div>
           <div class="input-group sync-group">
-            <span class="control-label">暗号文の同期</span>
-            <button class="sync-btn" id="syncCipherBtn">
-              📋 暗号化結果を取得
-            </button>
-            <small class="input-hint">暗号化タブの結果を自動で入力します</small>
+            <span class="control-label" data-i18n="sync.label"></span>
+            <button class="sync-btn" id="syncCipherBtn" data-i18n="sync.button"></button>
+            <small class="input-hint" data-i18n="sync.hint"></small>
           </div>
           <div class="input-group execute-group">
-            <button class="execute-btn" id="decryptExecuteBtn">🔓 復号実行</button>
+            <button class="execute-btn" id="decryptExecuteBtn" data-i18n="decrypt.run"></button>
           </div>
         </div>
-        <button id="bruteForceBtn" class="execute-btn">🔎 全行数を試す</button>
+        <button id="bruteForceBtn" class="execute-btn" data-i18n="brute.button"></button>
         <div id="bruteForceResults" class="brute-force-results" aria-live="polite"></div>
       </div>
 
@@ -117,19 +112,15 @@
           <div class="scytale-text" id="scytaleText"></div>
         </div>
         <div class="scytale-info">
-          <div id="scytaleStatus" aria-live="polite">
-            古代スパルタのスキュタレー（円柱）- 行数 = 円柱の太さ（行数を変更すると太さが変わります）
-          </div>
+          <div id="scytaleStatus" aria-live="polite"></div>
         </div>
       </div>
 
       <div class="visualization">
-        <h2 class="section-title">📊 マトリクス表示</h2>
+        <h2 class="section-title" data-i18n="matrix.heading"></h2>
         <div class="matrix-container">
           <div id="matrixDisplay">
-            <p class="matrix-description">
-              上記のボタンを押すとマトリクスが表示されます
-            </p>
+            <p class="matrix-description" data-i18n="matrix.empty"></p>
           </div>
         </div>
       </div>
@@ -137,36 +128,34 @@
       <div class="result-container">
         <p id="identityWarning" class="identity-warning" aria-live="polite"></p>
         <div class="result-heading">
-          <h2 class="section-title">
-            🎯 結果
-          </h2>
+          <h2 class="section-title" data-i18n="result.heading"></h2>
           <button
             id="copyBtn"
             class="copy-btn"
             hidden
           >
-            <span id="copyIcon" aria-hidden="true">📋</span> <span id="copyLabel">コピー</span>
+            <span id="copyIcon" aria-hidden="true">📋</span> <span id="copyLabel"></span>
           </button>
         </div>
-        <div id="resultText" class="result-text" aria-live="polite">結果がここに表示されます</div>
+        <div id="resultText" class="result-text" aria-live="polite"></div>
       </div>
 
-      <h2 class="section-title">🔬 アルゴリズム</h2>
+      <h2 class="section-title" data-i18n="algo.heading"></h2>
       <div class="algorithm-info">
         <div class="algorithm-step">
-          <h3>🔒 暗号化アルゴリズム</h3>
+          <h3 data-i18n="algo.encryptHeading"></h3>
           <ol>
-            <li>平文を指定した行数で折り返す</li>
-            <li>マトリクスに文字を配置</li>
-            <li>列方向に読み取って暗号文を生成</li>
+            <li data-i18n="algo.encrypt1"></li>
+            <li data-i18n="algo.encrypt2"></li>
+            <li data-i18n="algo.encrypt3"></li>
           </ol>
         </div>
         <div class="algorithm-step">
-          <h3>🔓 復号アルゴリズム</h3>
+          <h3 data-i18n="algo.decryptHeading"></h3>
           <ol>
-            <li>暗号文の長さから列数を計算</li>
-            <li>元の文字が入っていたセルだけへ列方向に分配</li>
-            <li>行方向に読み取って平文を復元</li>
+            <li data-i18n="algo.decrypt1"></li>
+            <li data-i18n="algo.decrypt2"></li>
+            <li data-i18n="algo.decrypt3"></li>
           </ol>
         </div>
       </div>
@@ -185,6 +174,7 @@
       </footer>
     </div>
 
+    <script src="js/i18n.js" defer></script>
     <script src="js/scytale-logic.js" defer></script>
     <script src="js/script.js" defer></script>
   </body>
