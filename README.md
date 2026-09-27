@@ -36,6 +36,8 @@ hub: true
 
 # Scytale Cipher Visualizer - スキュタレー暗号ビジュアライザー
 
+[English](README.en.md) · 日本語
+
 [![Stars](https://img.shields.io/github/stars/ipusiron/scytale-cipher-visualizer)](https://github.com/ipusiron/scytale-cipher-visualizer/stargazers)
 [![Forks](https://img.shields.io/github/forks/ipusiron/scytale-cipher-visualizer)](https://github.com/ipusiron/scytale-cipher-visualizer/network/members)
 [![Last commit](https://img.shields.io/github/last-commit/ipusiron/scytale-cipher-visualizer)](https://github.com/ipusiron/scytale-cipher-visualizer/commits/main)
@@ -90,6 +92,7 @@ hub: true
 - **全鍵探索**: 行数2〜10の9候補を表示し、同じ結果の行数をグループ化
 - **文字の保持**: 空白・日本語・絵文字をコードポイント単位で処理
 - **ダークモード**: OS設定に追従し、手動切り替えも可能
+- **日本語・英語の切り替え**: ヘッダー左上のボタンで切り替え。`?lang=en`の指定とブラウザー設定にも追従
 
 ## 📖 使い方
 
@@ -135,7 +138,8 @@ hub: true
 - **列ハイライト**: マウスのホバー、クリック、セルにフォーカスしてEnter／Spaceで切り替え
 - **結果**: 連続空白を保持した全文とコピーボタン。恒等となる設定には警告
 - **全鍵探索**: 9行の候補表、同じ結果の行数グループ、異なる結果の数
-- **テーマ**: ヘッダー右上で切り替え。テーマ設定のみローカルに保存
+- **テーマ**: ヘッダー右上で切り替え。テーマと言語の選択のみローカルに保存
+- **言語**: ヘッダー左上で日本語と英語を切り替え。入力や結果があるままでも内容は消えない
 
 ## 🎯 ユースケース
 
@@ -251,6 +255,7 @@ R L D
 ## 🔒 セキュリティ
 
 入力と結果はブラウザー内で処理し、外部APIへの送信や保存はしません。
+`localStorage`に保存するのはテーマと言語の選択だけで、入力や結果は保存しません。
 `textContent`による安全な描画を使い、入力をHTMLとして解釈しません。
 CSPをmetaで設定し、スクリプトとスタイルを同一配信元に限定しています。
 `object-src 'none'`・`base-uri 'self'`・`form-action 'self'`も指定しています。
@@ -268,6 +273,7 @@ Node 22以上で`npm test`を実行します。`node --test`を使い、依存�
 GitHub Actionsでもpushとpull_requestのたびに自動実行します。
 既知解答13例、英数字558通り・日本語と絵文字432通りの往復、全鍵探索、入力境界、配色、HTML、整形を検証します。
 READMEの表の暗号文・鍵空間の数値・画像参照とYAMLの構造もテスト対象です。
+日英の辞書についても、キーの集合・差し込み名の一致・訳し忘れ・純ロジックに和文が残っていないことを検証します。
 
 ```bash
 npm test
@@ -280,6 +286,13 @@ npm test
 - 🔄 [転置暗号の種類](https://en.wikipedia.org/wiki/Transposition_cipher)
 
 ## 🔄 更新履歴
+
+### v2.2.0（2026-09-28）
+
+- 日本語と英語の切り替えを追加（`js/i18n.js`、`?lang=`・保存値・ブラウザー設定に対応）
+- マトリクス・全鍵探索・円柱の状態・コピー通知を、言語切り替え時に訳し直すよう変更
+- 検証エラーを文言ではなく辞書のキーで返すよう`js/scytale-logic.js`を変更
+- `README.en.md`と`test/i18n.test.js`を追加
 
 ### v2.1.0（2026-09-19）
 
@@ -308,6 +321,7 @@ scytale-cipher-visualizer/
 ├── index.html              # タブ・フォーム・状態通知
 ├── css/style.css           # ライト／ダーク配色と円柱アニメーション
 ├── js/
+│   ├── i18n.js              # 日本語・英語の辞書と切り替え
 │   ├── scytale-logic.js     # DOMに依存しない暗号ロジック
 │   └── script.js            # 画面操作とマトリクス描画
 ├── assets/
@@ -315,10 +329,11 @@ scytale-cipher-visualizer/
 │   ├── screenshot.png       # 旧画像（保存）
 │   └── screenshot2.png〜screenshot4.png  # 現行画面3枚
 ├── screenshot.png          # 旧画像（保存）
-├── test/                   # 6ファイルの自動テスト
+├── test/                   # 7ファイルの自動テスト（test/i18n.test.jsを含む）
 ├── .github/workflows/test.yml  # Node 22でのCI
 ├── package.json            # npm testの定義（依存なし）
 ├── README.md               # 使い方と検証済みの例
+├── README.en.md            # 英語版README
 ├── CLAUDE.md               # 開発時の指示書
 ├── LICENSE                 # MITライセンス
 └── .gitignore              # Git除外設定
@@ -338,8 +353,12 @@ scytale-cipher-visualizer/
 - 全鍵探索の表示とテーマ切り替え
 
 **scytale-logic.js**
-- 入力値検証・サニタイゼーション
+- 入力値検証・サニタイゼーション（文言を持たず、辞書のキーと差し込み値を返す）
 - コードポイント単位の暗号化・復号・全鍵探索
+
+**i18n.js**
+- 日本語・英語の辞書と`t()`による差し込み
+- `data-i18n`属性の適用、`?lang=`・`localStorage`・ブラウザー設定からの言語決定
 
 **style.css**
 - レスポンシブタブデザイン

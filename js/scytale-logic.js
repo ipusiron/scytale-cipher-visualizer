@@ -6,22 +6,25 @@
         return input.replace(/[\x00-\x1F\x7F]/g, '');
     }
 
+    // 文言は持たず、辞書のキーと差し込み値だけを返します（表示の直前にi18nで訳します）。
+    const MAX_LENGTH = 10000;
+
     function validate(text, rows) {
-        if (Array.from(text).length > 10000) {
-            return '入力文字数が上限（10000文字）を超えています';
+        if (Array.from(text).length > MAX_LENGTH) {
+            return { key: 'error.tooLong', params: { max: MAX_LENGTH } };
         }
         if (!Number.isInteger(rows) || rows < 2 || rows > 10) {
-            return '行数は2〜10の整数で入力してください';
+            return { key: 'error.rows', params: {} };
         }
         if (text.length === 0) {
-            return 'テキストを入力してください';
+            return { key: 'error.empty', params: {} };
         }
         return null;
     }
 
     function checkRows(rows) {
         if (!Number.isInteger(rows) || rows < 2 || rows > 10) {
-            throw new RangeError('行数は2〜10の整数で入力してください');
+            throw new RangeError('error.rows');
         }
     }
 
@@ -107,8 +110,8 @@
     }
 
     function randomPadChars(count, randomSource = globalThis.crypto) {
-        if (!Number.isInteger(count) || count < 0 || count > 10000) {
-            throw new RangeError('埋字の文字数が不正です');
+        if (!Number.isInteger(count) || count < 0 || count > MAX_LENGTH) {
+            throw new RangeError('error.padCount');
         }
         const result = [];
         const bytes = new Uint8Array(32);
@@ -126,7 +129,7 @@
     }
 
     const ScytaleLogic = {
-        sanitize, validate, encrypt, decrypt, buildEncryptMatrix, buildDecryptMatrix,
+        MAX_LENGTH, sanitize, validate, encrypt, decrypt, buildEncryptMatrix, buildDecryptMatrix,
         isIdentity, usedRows, colLengths, bruteForce, randomPadChars
     };
     globalThis.ScytaleLogic = ScytaleLogic;

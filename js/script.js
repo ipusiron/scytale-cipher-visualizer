@@ -5,6 +5,13 @@
  */
 
 const logic = globalThis.ScytaleLogic;
+const i18n = globalThis.I18n;
+
+// 表示中の文言は、訳した文字列ではなく辞書のキーと差し込み値で覚えます。
+// languagechange のたびに render*() を呼び直せば、表示中の内容が訳し直されます。
+function t(key, values) {
+    return i18n.t(key, values);
+}
 
 // グローバル変数で現在のタブと結果を管理
 let currentTab = 'encrypt';
@@ -14,6 +21,14 @@ let processing = false;
 let pinnedColumn = null;
 let copyTimer;
 
+// 表示中の状態。文言そのものは持ちません。
+let messageState = null;
+let warningState = null;
+let rodState = { key: 'rod.initial', values: {} };
+let resultState = null;
+let matrixState = null;
+let searchState = null;
+
 function setBusy(busy) {
     processing = busy;
     const controls = '#encryptExecuteBtn, #decryptExecuteBtn, #syncCipherBtn, #bruteForceBtn, .candidate-btn, .tab-btn';
@@ -21,8 +36,61 @@ function setBusy(busy) {
     document.getElementById('resultText').setAttribute('aria-busy', String(busy));
 }
 
-function showMessage(message) {
-    document.getElementById('operationMessage').textContent = message;
+// 差し込み値が辞書のキーなら、表示の直前に訳します（純ロジックが返すキーを入れ子にできます）。
+function resolve(values) {
+    const resolved = {};
+    for (const [name, value] of Object.entries(values || {})) {
+        resolved[name] = typeof value === 'string' && i18n.has(value) ? t(value) : value;
+    }
+    return resolved;
+}
+
+function showMessage(key, values = {}) {
+    messageState = key ? { key, values } : null;
+    renderMessage();
+}
+
+function clearMessage() {
+    showMessage('');
+}
+
+function renderMessage() {
+    const element = document.getElementById('operationMessage');
+    element.textContent = messageState ? t(messageState.key, resolve(messageState.values)) : '';
+}
+
+function renderIdentityWarning() {
+    const element = document.getElementById('identityWarning');
+    if (!warningState) {
+        element.textContent = '';
+        return;
+    }
+    const key = warningState.padded ? 'warn.identityPadded' : 'warn.identity';
+    element.textContent = t(key, { rows: warningState.rows, count: warningState.count });
+}
+
+function renderRodStatus() {
+    document.getElementById('scytaleStatus').textContent = rodState ? t(rodState.key, rodState.values) : '';
+}
+
+function setRodStatus(key, values = {}) {
+    rodState = { key, values };
+    renderRodStatus();
+}
+
+function renderResult() {
+    const element = document.getElementById('resultText');
+    element.textContent = resultState === null ? t('result.empty') : resultState;
+}
+
+// 復帰する文言を定数に持たず、dataset の印から組み立て直します。
+function renderCopyButton() {
+    const button = document.getElementById('copyBtn');
+    const state = button.dataset.copyState || '';
+    button.classList.toggle('copy-success', state === 'done');
+    document.getElementById('copyIcon').textContent = state === 'done' ? '✅' : state === 'failed' ? '❌' : '📋';
+    const key = state === 'done' ? 'copy.done' : state === 'failed' ? 'copy.failed' : 'copy.label';
+    document.getElementById('copyLabel').textContent = t(key);
 }
 
 function processText(mode = null) {
@@ -46,13 +114,14 @@ function processText(mode = null) {
 
     const validationError = logic.validate(inputText, rows);
     if (validationError) {
-        showMessage(validationError);
+        showMessage(validationError.key, validationError.params);
         return;
     }
 
     const fillPadding = mode === 'encrypt' && document.getElementById('fillPadding').checked;
-    showMessage('');
-    document.getElementById('identityWarning').textContent = '';
+    clearMessage();
+    warningState = null;
+    renderIdentityWarning();
     setBusy(true);
 
     // スキュタレーアニメーション開始
@@ -75,18 +144,19 @@ function processText(mode = null) {
                 matrix = logic.buildDecryptMatrix(inputText, rows);
             }
             displayMatrix(matrix, mode, inputText, fillPadding);
-            document.getElementById('resultText').textContent = result;
+            resultState = result;
+            renderResult();
             document.getElementById('copyBtn').hidden = false;
             if (logic.isIdentity(n, rows)) {
-                const warning = `行数（${rows}）が文字数（${n}）以上のため、列数が1になり、暗号文は平文と同じになります`;
-                document.getElementById('identityWarning').textContent = fillPadding
-                    ? `${warning}（埋字なしの場合）。今回は末尾に埋字が追加されます。` : warning;
+                warningState = { rows, count: n, padded: fillPadding };
+                renderIdentityWarning();
             }
             stopScytaleAnimation();
         } catch (error) {
             stopScytaleAnimation();
-            showMessage(`処理できませんでした。${error.message}`);
-            document.getElementById('scytaleStatus').textContent = '入力と設定をご確認ください。';
+            // RangeError のメッセージは辞書のキーなので、resolve() が訳します。
+            showMessage('error.process', { message: error && error.message ? String(error.message) : '' });
+            setRodStatus('rod.checkInput');
         } finally {
             setBusy(false);
         }
@@ -96,11 +166,18 @@ function processText(mode = null) {
 }
 
 function displayMatrix(matrix, mode, originalText, fillPadding = false) {
-    const display = document.getElementById('matrixDisplay');
     pinnedColumn = null;
+    matrixState = { matrix, mode, originalText, fillPadding };
+    renderMatrix();
+}
+
+function renderMatrix() {
+    if (!matrixState) return;
+    const display = document.getElementById('matrixDisplay');
+    const { matrix, mode, originalText, fillPadding } = matrixState;
 
     if (matrix.length === 0) {
-        display.textContent = 'マトリクスを生成できませんでした';
+        display.textContent = t('matrix.failed');
         return;
     }
 
@@ -108,20 +185,21 @@ function displayMatrix(matrix, mode, originalText, fillPadding = false) {
     const inputLength = Array.from(inputText).length;
     const cols = matrix[0].length;
     const shownCols = Math.min(cols, 60);
+    const modeText = t(mode === 'encrypt' ? 'mode.encrypt' : 'mode.decrypt');
 
     // テーブル要素を作成
     const table = document.createElement('table');
     table.className = 'matrix-table';
     const caption = document.createElement('caption');
     caption.className = 'visually-hidden';
-    caption.textContent = `${mode === 'encrypt' ? '暗号化' : '復号'}マトリクス。行・列番号は0から始まります。`;
+    caption.textContent = t('matrix.caption', { mode: modeText });
     table.appendChild(caption);
 
     // ヘッダー行（列番号）
     const headerRow = document.createElement('tr');
     const cornerCell = document.createElement('th');
     cornerCell.scope = 'col';
-    cornerCell.textContent = '行\\列';
+    cornerCell.textContent = t('matrix.corner');
     headerRow.appendChild(cornerCell);
 
     for (let col = 0; col < shownCols; col++) {
@@ -155,7 +233,11 @@ function displayMatrix(matrix, mode, originalText, fillPadding = false) {
             }
             if (!char) cell.classList.add('empty-cell');
             cell.tabIndex = 0;
-            cell.setAttribute('aria-label', `行${row}列${col}の文字${char || 'なし'}${isPadding ? '（埋字）' : ''}`);
+            cell.setAttribute('aria-label', t('matrix.cellAria', {
+                row, col,
+                char: char || t('matrix.cellNone'),
+                pad: isPadding ? t('matrix.cellPadding') : ''
+            }));
 
             // イベントリスナーを安全に追加
             cell.addEventListener('mouseover', () => {
@@ -187,17 +269,11 @@ function displayMatrix(matrix, mode, originalText, fillPadding = false) {
     // 説明文を追加
     const description = document.createElement('p');
     description.className = 'matrix-description';
-
-    const modeText = mode === 'encrypt' ? '暗号化' : '復号';
-    const processText = mode === 'encrypt' ?
-        '各行に色分けして配置し、列方向（縦）に読み取ります' :
-        '列方向に文字を分配し、行方向（横）に読み取ります';
-
-    description.textContent = `${modeText}プロセス: ${processText}`;
+    description.textContent = t(mode === 'encrypt' ? 'matrix.descEncrypt' : 'matrix.descDecrypt');
 
     if (fillPadding && mode === 'encrypt') {
         const paddingNote = document.createElement('span');
-        paddingNote.textContent = ' 💡 赤い背景はランダム埋字です';
+        paddingNote.textContent = t('matrix.paddingNote');
         description.appendChild(document.createElement('br'));
         description.appendChild(paddingNote);
     }
@@ -205,9 +281,13 @@ function displayMatrix(matrix, mode, originalText, fillPadding = false) {
     display.appendChild(description);
     const note = document.createElement('p');
     note.className = 'matrix-description';
-    note.textContent = `全${matrix.length}行${cols}列。文字が入る行は${fillPadding ? matrix.length : logic.usedRows(inputLength, matrix.length)}行です。`;
-    if (cols > shownCols) note.textContent += ` 全${cols}列のうち先頭60列を表示しています。`;
+    const used = fillPadding ? matrix.length : logic.usedRows(inputLength, matrix.length);
+    note.textContent = t('matrix.size', { rows: matrix.length, cols, used });
+    if (cols > shownCols) note.textContent += t('matrix.truncated', { cols, shown: shownCols });
     display.appendChild(note);
+
+    // 言語を切り替えて描き直したあとも、固定した列のハイライトを保ちます。
+    restoreHighlight();
 }
 
 function highlightColumn(col) {
@@ -240,7 +320,6 @@ function animateScytale(mode, text) {
     const rod = document.getElementById('scytaleRod');
     const band = document.getElementById('scytaleBand');
     const textEl = document.getElementById('scytaleText');
-    const status = document.getElementById('scytaleStatus');
 
     // 処理開始のアニメーション
     rod.classList.add('processing-animation');
@@ -252,21 +331,20 @@ function animateScytale(mode, text) {
 
     if (mode === 'encrypt') {
         band.classList.add('band-animate-wrap');
-        status.textContent = '🔒 暗号化中: 紐を円柱に巻いています...';
+        setRodStatus('rod.encrypting');
     } else {
         band.classList.add('band-animate-unwrap');
-        status.textContent = '🔓 復号中: 紐を円柱からほどいています...';
+        setRodStatus('rod.decrypting');
     }
 }
 
 function stopScytaleAnimation() {
     const rod = document.getElementById('scytaleRod');
     const band = document.getElementById('scytaleBand');
-    const status = document.getElementById('scytaleStatus');
 
     rod.classList.remove('processing-animation');
     band.classList.remove('band-animate-wrap', 'band-animate-unwrap');
-    status.textContent = '✅ 処理完了！マトリクスと結果をご確認ください';
+    setRodStatus('rod.done');
 }
 
 function updateScytaleSize() {
@@ -296,7 +374,7 @@ function updateScytaleSize() {
     band.style.setProperty('--band-step', `${4 + rows}px`);
     band.style.setProperty('--band-period', `${8 + rows * 2}px`);
     const n = Array.from(logic.sanitize(document.getElementById(`${currentTab}InputText`).value)).length;
-    document.getElementById('scytaleStatus').textContent = `行数${rows}→列数${Math.ceil(n / rows)}（円柱${Math.ceil(n / rows)}周分）`;
+    setRodStatus('rod.size', { rows, cols: Math.ceil(n / rows) });
 }
 
 // タブ切り替え関数
@@ -326,11 +404,16 @@ function switchTab(tabName) {
     updateScytaleSize();
 }
 
+function clearBruteForce() {
+    searchState = null;
+    document.getElementById('bruteForceResults').replaceChildren();
+}
+
 // 暗号文同期関数
 function syncCipherText() {
     if (processing) return;
     if (!encryptResult) {
-        showMessage('まず暗号化タブで暗号化を実行してください');
+        showMessage('msg.needEncrypt');
         return;
     }
 
@@ -339,12 +422,12 @@ function syncCipherText() {
 
     // 暗号化タブの行数を復号タブにも設定
     document.getElementById('decryptRows').value = encryptedRows;
-    document.getElementById('bruteForceResults').replaceChildren();
+    clearBruteForce();
     updateInputCounts();
     updateScytaleSize();
 
     // フィードバック表示
-    showMessage('暗号化結果と、その暗号化に使った行数を同期しました。');
+    showMessage('msg.synced');
 }
 
 async function copyResult() {
@@ -363,7 +446,7 @@ async function copyResult() {
         // フォールバック: 古いブラウザー対応
         const textArea = document.createElement('textarea');
         textArea.className = 'clipboard-fallback';
-        textArea.setAttribute('aria-label', 'コピーする結果');
+        textArea.setAttribute('aria-label', t('copy.fallbackAria'));
         textArea.value = resultText;
         document.body.appendChild(textArea);
         textArea.select();
@@ -375,14 +458,12 @@ async function copyResult() {
         document.body.removeChild(textArea);
     }
     clearTimeout(copyTimer);
-    copyBtn.classList.toggle('copy-success', copied);
-    document.getElementById('copyIcon').textContent = copied ? '✅' : '❌';
-    document.getElementById('copyLabel').textContent = copied ? 'コピー完了！' : 'コピー失敗';
-    showMessage(copied ? '結果をコピーしました。' : 'コピーできませんでした。結果を選択して手動でコピーしてください。');
+    copyBtn.dataset.copyState = copied ? 'done' : 'failed';
+    renderCopyButton();
+    showMessage(copied ? 'msg.copied' : 'msg.copyFailed');
     copyTimer = setTimeout(() => {
-        copyBtn.classList.remove('copy-success');
-        document.getElementById('copyIcon').textContent = '📋';
-        document.getElementById('copyLabel').textContent = 'コピー';
+        copyBtn.dataset.copyState = '';
+        renderCopyButton();
     }, 2000);
 }
 
@@ -391,90 +472,104 @@ function showBruteForce() {
     const cipher = logic.sanitize(document.getElementById('decryptInputText').value);
     const error = logic.validate(cipher, 2);
     if (error) {
-        showMessage(error);
+        showMessage(error.key, error.params);
         return;
     }
     setBusy(true);
-    showMessage('');
+    clearMessage();
     try {
-        const search = logic.bruteForce(cipher);
-        const display = document.getElementById('bruteForceResults');
-        display.replaceChildren();
-        const heading = document.createElement('h2');
-        heading.textContent = `全鍵探索：異なる結果は${search.uniqueCount}種類`;
-        display.appendChild(heading);
-        const table = document.createElement('table');
-        table.className = 'brute-force-table';
-        const caption = document.createElement('caption');
-        caption.className = 'visually-hidden';
-        caption.textContent = '行数2〜10の復号候補';
-        table.appendChild(caption);
-        const columns = document.createElement('colgroup');
-        for (const className of ['key-column', 'key-column', 'plaintext-column', 'action-column']) {
-            const column = document.createElement('col');
-            column.className = className;
-            columns.appendChild(column);
-        }
-        table.appendChild(columns);
-        const header = document.createElement('tr');
-        for (const title of ['行数', '列数', '復号結果', '操作']) {
-            const cell = document.createElement('th');
-            cell.scope = 'col';
-            cell.textContent = title;
-            header.appendChild(cell);
-        }
-        table.appendChild(header);
-        for (const item of search.results) {
-            const row = document.createElement('tr');
-            for (const value of [item.rows, item.cols, item.plaintext]) {
-                const cell = document.createElement('td');
-                cell.textContent = value;
-                row.appendChild(cell);
-            }
-            const action = document.createElement('td');
-            const button = document.createElement('button');
-            button.className = 'candidate-btn';
-            button.textContent = 'この行数で復号する';
-            button.setAttribute('aria-label', `行数${item.rows}で復号する`);
-            button.addEventListener('click', () => {
-                if (processing) return;
-                document.getElementById('decryptInputText').value = cipher;
-                document.getElementById('decryptRows').value = item.rows;
-                updateInputCounts();
-                updateScytaleSize();
-                processText('decrypt');
-            });
-            action.appendChild(button);
-            row.appendChild(action);
-            table.appendChild(row);
-        }
-        display.appendChild(table);
-        const groups = document.createElement('p');
-        groups.className = 'search-groups';
-        groups.textContent = '同じ結果の行数グループ：' + search.groups.map(group => `[${group.rows.join(', ')}]`).join(' ／ ');
-        display.appendChild(groups);
-        const note = document.createElement('p');
-        note.textContent = '行数は2〜10の9通りだが、実質の鍵は列数（＝ceil(文字数÷行数)）なので、'
-            + `異なる結果は${search.uniqueCount}種類しかない`;
-        display.appendChild(note);
+        searchState = { cipher, search: logic.bruteForce(cipher) };
+        renderBruteForce();
     } finally {
         setBusy(false);
     }
 }
 
+function renderBruteForce() {
+    if (!searchState) return;
+    const { cipher, search } = searchState;
+    const display = document.getElementById('bruteForceResults');
+    display.replaceChildren();
+    const heading = document.createElement('h2');
+    heading.textContent = t('brute.heading', { count: search.uniqueCount });
+    display.appendChild(heading);
+    const table = document.createElement('table');
+    table.className = 'brute-force-table';
+    const caption = document.createElement('caption');
+    caption.className = 'visually-hidden';
+    caption.textContent = t('brute.caption');
+    table.appendChild(caption);
+    const columns = document.createElement('colgroup');
+    for (const className of ['key-column', 'key-column', 'plaintext-column', 'action-column']) {
+        const column = document.createElement('col');
+        column.className = className;
+        columns.appendChild(column);
+    }
+    table.appendChild(columns);
+    const header = document.createElement('tr');
+    for (const key of ['brute.colRows', 'brute.colCols', 'brute.colPlain', 'brute.colAction']) {
+        const cell = document.createElement('th');
+        cell.scope = 'col';
+        cell.textContent = t(key);
+        header.appendChild(cell);
+    }
+    table.appendChild(header);
+    for (const item of search.results) {
+        const row = document.createElement('tr');
+        for (const value of [item.rows, item.cols, item.plaintext]) {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.appendChild(cell);
+        }
+        const action = document.createElement('td');
+        const button = document.createElement('button');
+        button.className = 'candidate-btn';
+        button.textContent = t('brute.useRows');
+        button.disabled = processing;
+        button.setAttribute('aria-label', t('brute.useRowsAria', { rows: item.rows }));
+        button.addEventListener('click', () => {
+            if (processing) return;
+            document.getElementById('decryptInputText').value = cipher;
+            document.getElementById('decryptRows').value = item.rows;
+            updateInputCounts();
+            updateScytaleSize();
+            processText('decrypt');
+        });
+        action.appendChild(button);
+        row.appendChild(action);
+        table.appendChild(row);
+    }
+    display.appendChild(table);
+    const groups = document.createElement('p');
+    groups.className = 'search-groups';
+    const list = search.groups.map(group => `[${group.rows.join(', ')}]`).join(t('brute.groupSeparator'));
+    groups.textContent = t('brute.groups', { list });
+    display.appendChild(groups);
+    const note = document.createElement('p');
+    note.textContent = t('brute.note', { count: search.uniqueCount });
+    display.appendChild(note);
+}
+
 function updateInputCounts() {
     for (const mode of ['encrypt', 'decrypt']) {
         const n = Array.from(logic.sanitize(document.getElementById(`${mode}InputText`).value)).length;
-        document.getElementById(`${mode}CharCount`).textContent = `有効文字数：${n}文字（空白を含む／上限10000文字）`;
+        document.getElementById(`${mode}CharCount`).textContent =
+            t('count.text', { count: n, max: logic.MAX_LENGTH });
     }
 }
 
 function applyTheme(theme) {
     document.documentElement.dataset.theme = theme;
+    renderThemeButton();
+}
+
+// 状態で変わる属性は data-i18n-aria-label に任せず、状態から組み立て直します。
+function renderThemeButton() {
+    const dark = document.documentElement.dataset.theme === 'dark';
     const button = document.getElementById('themeToggleBtn');
-    button.setAttribute('aria-pressed', String(theme === 'dark'));
-    button.setAttribute('aria-label', theme === 'dark' ? 'ライトモードに切り替える' : 'ダークモードに切り替える');
-    button.textContent = theme === 'dark' ? '☀️' : '🌙';
+    button.setAttribute('aria-pressed', String(dark));
+    button.setAttribute('aria-label', t(dark ? 'theme.toLight' : 'theme.toDark'));
+    button.textContent = dark ? '☀️' : '🌙';
 }
 
 function initializeTheme() {
@@ -494,8 +589,29 @@ function initializeTheme() {
     });
 }
 
+function initializeLanguage() {
+    i18n.init();
+    document.getElementById('langToggle').addEventListener('click', () => {
+        i18n.setLanguage(i18n.language === 'ja' ? 'en' : 'ja');
+    });
+    // 表示中のものを、覚えたキーから全部訳し直します。
+    document.addEventListener('languagechange', () => {
+        renderThemeButton();
+        renderMessage();
+        renderIdentityWarning();
+        renderRodStatus();
+        renderResult();
+        renderCopyButton();
+        renderMatrix();
+        renderBruteForce();
+        updateInputCounts();
+    });
+}
+
 // イベントリスナー設定
 document.addEventListener('DOMContentLoaded', function() {
+    initializeLanguage();
+
     // タブ切り替えのイベントリスナー
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -541,11 +657,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 初期設定
     initializeTheme();
+    renderRodStatus();
+    renderResult();
+    renderCopyButton();
     for (const mode of ['encrypt', 'decrypt']) {
         document.getElementById(`${mode}InputText`).addEventListener('input', () => {
             updateInputCounts();
             if (!processing) updateScytaleSize();
-            if (mode === 'decrypt') document.getElementById('bruteForceResults').replaceChildren();
+            if (mode === 'decrypt') clearBruteForce();
         });
     }
     document.getElementById('encryptInputText').value = 'HELLO_WORLD';
