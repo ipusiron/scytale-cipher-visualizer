@@ -100,6 +100,14 @@ Result: "SECRET_MESSAGE"
 
 ## 🎯 Use cases
 
+### Ways of using this tool in particular
+
+- Seeing how a rearrangement spreads out a burst of errors (a class on communication and storage): even if three consecutive characters of the ciphertext are damaged, decryption splits them into three separate places in the plaintext. Encrypt WE_ARE_DISCOVERED with 4 rows to get WECEE_OD_DVAIERSR, damage its first three characters, and after decryption the damaged ones are the 1st, 6th and 11th characters, every 5 characters, which is the number of columns. Single damaged characters are easier to guess from their neighbors. This is the same idea as the interleaving (rearranging to spread errors) used in CDs and wireless communication (in practice it is combined with an error-correcting code; rearranging alone does not fix errors)
+- Feeling how reading order changes the text (crafts and language lessons for children): the same grid gives a different string just by reading in another direction. HELLO_WORLD written across a grid with 3 rows reads HORE_LLWDLO down the columns. It works as an answer key for comparing vertical and horizontal writing, or for a craft of winding a paper strip around a pencil
+- Comparing members of the transposition family: put the same plaintext through the zigzag of [RailFence CipherLab](https://ipusiron.github.io/railfence-cipherlab/) (Day034) and the column reordering of [Columnar CipherLab](https://ipusiron.github.io/columnar-cipherlab/) (Day043), and confirm that all of them change only the order, never the letters, and differ in how the key is chosen
+
+### General uses
+
 - Explaining transposition ciphers in a class or a study group
 - Watching what happens to spaces, Japanese text and emoji when they are rearranged
 - Seeing how small the key space really is, and which keys are equivalent

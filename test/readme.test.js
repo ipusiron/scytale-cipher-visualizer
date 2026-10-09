@@ -67,3 +67,18 @@ test('YAMLのHTMLコメント・キー順・ブロック形式・固定値を保
         assert.ok(yaml.includes(`  - ${tag}`));
     }
 });
+
+test('ユースケースの「このツールならではの使い方」の例を実ロジックで再計算（日英）', () => {
+    const readmeEn = fs.readFileSync(path.join(root, 'README.en.md'), 'utf8');
+    const cipher = encrypt('WE_ARE_DISCOVERED', 4);
+    assert.equal(cipher, 'WECEE_OD_DVAIERSR');
+    const damaged = '###' + cipher.slice(3);
+    const plain = decrypt(damaged, 4);
+    const hit = [...plain].map((ch, i) => (ch === '#' ? i + 1 : 0)).filter(Boolean);
+    assert.deepEqual(hit, [1, 6, 11]);
+    assert.equal(Math.ceil('WE_ARE_DISCOVERED'.length / 4), 5);
+    assert.ok(readme.includes('復号後に壊れているのは1・6・11文字目で、列数と同じ5文字おき'));
+    assert.ok(readmeEn.includes('the damaged ones are the 1st, 6th and 11th characters, every 5 characters'));
+    assert.equal(encrypt('HELLO_WORLD', 3), 'HORE_LLWDLO');
+    for (const text of [readme, readmeEn]) assert.ok(text.includes('HELLO_WORLD') && text.includes('HORE_LLWDLO'));
+});
