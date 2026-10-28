@@ -242,6 +242,7 @@ scytale-cipher-visualizer/
 ├── index.html              # Tabs, forms and status regions
 ├── css/style.css           # Light and dark palettes, rod animation
 ├── js/
+│   ├── theme-init.js        # Sets the light or dark theme before the first paint
 │   ├── i18n.js              # Japanese and English dictionaries, language switching
 │   ├── scytale-logic.js     # Cipher logic with no DOM dependency
 │   └── script.js            # UI handling and matrix rendering
@@ -250,7 +251,7 @@ scytale-cipher-visualizer/
 │   ├── screenshot.png       # Older image, kept
 │   └── screenshot2.png to screenshot4.png  # The three current screens
 ├── screenshot.png          # Older image, kept
-├── test/                   # Seven test files, including test/i18n.test.js
+├── test/                   # Eight test files, including test/i18n.test.js
 ├── .github/workflows/test.yml  # CI on Node 22
 ├── package.json            # npm test, no dependencies
 ├── README.md               # Japanese README
