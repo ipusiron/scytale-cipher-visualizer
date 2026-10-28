@@ -577,7 +577,8 @@ function initializeTheme() {
     try { stored = localStorage.getItem('theme'); } catch (error) { /* 保存不可でも操作できます。 */ }
     const preferred = matchMedia('(prefers-color-scheme: dark)');
     let explicit = stored === 'light' || stored === 'dark';
-    applyTheme(explicit ? stored : (preferred.matches ? 'dark' : 'light'));
+    // 最初のテーマは <head> の js/theme-init.js が描画前に data-theme へ入れています。ここではボタンを同期するだけです。
+    renderThemeButton();
     preferred.addEventListener('change', event => {
         if (!explicit) applyTheme(event.matches ? 'dark' : 'light');
     });

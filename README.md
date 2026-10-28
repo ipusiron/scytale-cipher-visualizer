@@ -329,6 +329,7 @@ scytale-cipher-visualizer/
 ├── index.html              # タブ・フォーム・状態通知
 ├── css/style.css           # ライト／ダーク配色と円柱アニメーション
 ├── js/
+│   ├── theme-init.js        # 最初の描画の前にテーマ（ライト／ダーク）を決める
 │   ├── i18n.js              # 日本語・英語の辞書と切り替え
 │   ├── scytale-logic.js     # DOMに依存しない暗号ロジック
 │   └── script.js            # 画面操作とマトリクス描画
@@ -337,7 +338,7 @@ scytale-cipher-visualizer/
 │   ├── screenshot.png       # 旧画像（保存）
 │   └── screenshot2.png〜screenshot4.png  # 現行画面3枚
 ├── screenshot.png          # 旧画像（保存）
-├── test/                   # 7ファイルの自動テスト（test/i18n.test.jsを含む）
+├── test/                   # 8ファイルの自動テスト（test/i18n.test.jsを含む）
 ├── .github/workflows/test.yml  # Node 22でのCI
 ├── package.json            # npm testの定義（依存なし）
 ├── README.md               # 使い方と検証済みの例

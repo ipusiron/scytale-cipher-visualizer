@@ -28,11 +28,12 @@ python -m http.server 8000
 scytale-cipher-visualizer/
 ├── index.html          # Main HTML page with UI components
 ├── css/style.css       # Complete styling with animations and matrix visualization
+├── js/theme-init.js    # 最初の描画の前にテーマを決める（<head>で同期読み込み）
 ├── js/i18n.js          # 日本語・英語の辞書と切り替え（他のスクリプトより先に読む）
 ├── js/scytale-logic.js # DOMに依存しない暗号ロジック
 ├── js/script.js        # DOM処理とアニメーション
 ├── assets/             # faviconとスクリーンショット
-├── test/               # 7ファイルのnode:test
+├── test/               # 8ファイルのnode:test
 ├── .github/workflows/test.yml # pushとpull_requestでNode 22のテスト
 ├── package.json        # npm test（依存なし）
 ├── README.en.md        # 英語版README
@@ -61,7 +62,7 @@ scytale-cipher-visualizer/
 - `processText` — 入力を固定して実行し、処理中の多重実行を抑止
 - `copyResult` — spanのtextContentでコピー通知を更新。フォールバックも保持
 - `showBruteForce` / `syncCipherText` — 9候補の表示と暗号化時の行数を含む同期
-- `initializeTheme` / `applyTheme` — 検証したlight／dark設定の復元
+- `initializeTheme` / `applyTheme` — テーマボタンの同期と切り替え。保存値・OS設定からの初回の判定は`js/theme-init.js`が`<head>`で行う
 
 **Internationalization (js/i18n.js):**
 

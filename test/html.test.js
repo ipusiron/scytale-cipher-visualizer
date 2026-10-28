@@ -19,13 +19,16 @@ test('CSP・referrer・viewport・noscript・faviconと安全な描画', () => {
     assert.doesNotMatch(script, /innerHTML|alert\(|Math\.random\(|style\.cssText|escapeHtml|function encrypt\(/);
 });
 
-test('古典スクリプトを正しい順でdefer読み込み', () => {
+test('古典スクリプトを正しい順で読み込む（theme-initは同期、ほかはdefer）', () => {
     const scripts = [...html.matchAll(/<script\b([^>]*)>/g)];
-    assert.equal(scripts.length, 3);
+    assert.equal(scripts.length, 4);
     assert.deepEqual(scripts.map(m => m[1].match(/src="([^"]+)"/)[1]),
-        ['js/i18n.js', 'js/scytale-logic.js', 'js/script.js']);
-    for (const script of scripts) {
+        ['js/theme-init.js', 'js/i18n.js', 'js/scytale-logic.js', 'js/script.js']);
+    assert.doesNotMatch(scripts[0][1], /\b(?:defer|async)\b/);
+    for (const script of scripts.slice(1)) {
         assert.match(script[1], /\bdefer\b/);
+    }
+    for (const script of scripts) {
         assert.doesNotMatch(script[1], /type="module"/);
     }
 });
