@@ -289,7 +289,7 @@ npm test
 
 ## 🔗 参考
 
-- 🎓 [暗号技術について（akademeia.info）](https://akademeia.info/category/crypto/)
+- 🎓 [暗号技術について（akademeia.info）](https://akademeia.info/?cat=23)
 - 📜 [古典暗号の歴史](https://en.wikipedia.org/wiki/Classical_cipher)
 - 🔄 [転置暗号の種類](https://en.wikipedia.org/wiki/Transposition_cipher)
 

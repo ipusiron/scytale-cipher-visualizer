@@ -231,7 +231,7 @@ npm test
 
 ## 🔗 References
 
-- 🎓 [Cryptography articles (akademeia.info, in Japanese)](https://akademeia.info/category/crypto/)
+- 🎓 [Cryptography articles (akademeia.info, in Japanese)](https://akademeia.info/?cat=23)
 - 📜 [Classical cipher](https://en.wikipedia.org/wiki/Classical_cipher)
 - 🔄 [Transposition cipher](https://en.wikipedia.org/wiki/Transposition_cipher)
 
